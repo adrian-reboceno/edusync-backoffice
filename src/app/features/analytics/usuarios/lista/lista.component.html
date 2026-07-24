@@ -1,0 +1,80 @@
+<div class="lista-container">
+  <div class="page-header">
+    <h1>Lista de Usuarios</h1>
+    <p>Gestión y monitoreo de usuarios del sistema</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <h2>Filtros</h2>
+      <button class="btn-clear" (click)="limpiarFiltros()"
+              *ngIf="busqueda || filtroRol || filtroEstado">
+        Limpiar
+      </button>
+    </div>
+
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Búsqueda</label>
+        <input type="text" [(ngModel)]="busqueda"
+               (input)="onFiltroChange()"
+               placeholder="Nombre o email...">
+      </div>
+
+      <div class="filter-group">
+        <label>Rol</label>
+        <select [(ngModel)]="filtroRol" (change)="onFiltroChange()">
+          <option value="">Todos</option>
+          <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="filtroEstado" (change)="onFiltroChange()">
+          <option value="">Todos</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="results-summary">
+    Se encontraron <strong>{{ usuariosFiltrados.length }}</strong> usuario(s)
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <table class="usuarios-table" *ngIf="usuariosFiltrados.length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Fecha Registro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let usuario of usuariosFiltrados" [class.inactivo]="usuario.estado === 'inactivo'">
+          <td>{{ usuario.nombre }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.rol }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="usuario.estado">
+              {{ usuario.estado | uppercase }}
+            </span>
+          </td>
+          <td>{{ usuario.fechaRegistro }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="usuariosFiltrados.length === 0">
+      <p>No hay usuarios que coincidan con los filtros</p>
+    </div>
+  </div>
+</div>

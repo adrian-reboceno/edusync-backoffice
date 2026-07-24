@@ -26,13 +26,17 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Limpiar datos del formulario al abrir login
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     this.initForm();
   }
 
   private initForm(): void {
     this.loginForm = this.fb.group({
-      email: ['admin@edusync.edu', [Validators.required, Validators.email]],
-      password: ['Admin@2024!', [Validators.required, Validators.minLength(8)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       totp_code: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [false]
     });
@@ -67,7 +71,6 @@ export class LoginComponent implements OnInit {
           );
 
           setTimeout(() => {
-            this.loginForm.reset();
             this.router.navigate(['/dashboard']);
           }, 1500);
         }
