@@ -1,0 +1,61 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <div class="brand-logo">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">EduSync</span>
+    </div>
+    
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-item active">Dashboard</a></li>
+      <li><a href="#" class="nav-item">Sincronización</a></li>
+      <li><a href="#" class="nav-item">Usuarios</a></li>
+      <li><a href="#" class="nav-item">Reportes</a></li>
+      <li><a href="#" class="nav-item">Administración</a></li>
+      <li><a href="#" class="nav-item">Configuración</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-right">
+    <!-- Notifications -->
+    <div class="notification-container">
+      <button class="notification-btn" (click)="toggleNotifications()">
+        <span class="bell-icon">🔔</span>
+        <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+      </button>
+
+      <!-- Notifications Dropdown -->
+      <div class="notifications-dropdown" *ngIf="showNotifications">
+        <div class="notifications-header">
+          <h3>Notificaciones</h3>
+          <button class="clear-btn" (click)="clearAllNotifications()">Limpiar todas</button>
+        </div>
+        <div class="notifications-list">
+          <div *ngIf="notifications.length === 0" class="no-notifications">
+            No hay notificaciones
+          </div>
+          <div *ngFor="let notif of notifications" class="notification-item" [class]="notif.type">
+            <p>{{ notif.message }}</p>
+            <button class="view-btn" (click)="viewNotification(notif)">Ver</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile -->
+    <div class="user-profile" (click)="toggleUserMenu()">
+      <div class="user-avatar">{{ user?.first_name?.charAt(0) }}</div>
+      <div class="user-info">
+        <p class="user-name">{{ user?.first_name }} {{ user?.last_name }}</p>
+        <p class="user-role">Administrador</p>
+      </div>
+      <span class="dropdown-icon">▼</span>
+
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <a href="#" class="dropdown-item">Mi Perfil</a>
+        <a href="#" class="dropdown-item">Configuración</a>
+        <hr>
+        <a href="#" class="dropdown-item logout" (click)="logout()">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,122 @@
+<div class="auth-page">
+  <div class="auth-container">
+    <!-- Left Side: Branding -->
+    <div class="auth-sidebar">
+      <div class="auth-sidebar-content">
+        <div class="brand-logo">🎓</div>
+        <h1 class="brand-title">EduSync<br><span>Bridge</span></h1>
+        <p class="brand-tagline">Gestión integral de datos académicos</p>
+        <p class="brand-quote">"Sincronización bidireccional entre sistemas educativos"</p>
+      </div>
+    </div>
+
+    <!-- Right Side: Login Form -->
+    <div class="auth-form-container">
+      <div class="auth-form-wrapper">
+        <h2 class="auth-title">Bienvenido</h2>
+        <p class="auth-subtitle">Inicia sesión para continuar</p>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <div class="input-wrapper">
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-control"
+                placeholder="usuario@farmacia.com"
+                [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+              />
+              <svg class="input-icon" width="18" height="14" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 2h20v14H2V2zm19 1l-9 7-9-7v12h18V3z" fill="currentColor"/>
+              </svg>
+            </div>
+            <small class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+              Ingresa un correo válido
+            </small>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password" class="form-label">Contraseña</label>
+            <div class="input-wrapper">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                formControlName="password"
+                class="form-control"
+                placeholder="Ingresa tu contraseña"
+                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+              />
+              <button
+                type="button"
+                class="input-icon-btn"
+                (click)="togglePasswordVisibility()"
+                tabindex="-1"
+              >
+                <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+            <small class="form-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              La contraseña debe tener mínimo 8 caracteres
+            </small>
+          </div>
+
+          <!-- TOTP Code -->
+          <div class="form-group">
+            <label for="totp_code" class="form-label">Código TOTP (6 dígitos)</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="totp_code"
+                formControlName="totp_code"
+                class="form-control totp-input"
+                placeholder="000000"
+                maxlength="6"
+                inputmode="numeric"
+                [class.is-invalid]="loginForm.get('totp_code')?.invalid && loginForm.get('totp_code')?.touched"
+              />
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <small class="form-error" *ngIf="loginForm.get('totp_code')?.invalid && loginForm.get('totp_code')?.touched">
+              Ingresa un código válido de 6 dígitos
+            </small>
+          </div>
+
+          <!-- Remember Me -->
+          <label class="form-checkbox">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>Recuérdame</span>
+          </label>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="loginForm.invalid || loading"
+          >
+            <span *ngIf="!loading">Iniciar sesión</span>
+            <span *ngIf="loading">Iniciando sesión...</span>
+          </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+          <p class="copyright">© 2026 EduSync Bridge</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
