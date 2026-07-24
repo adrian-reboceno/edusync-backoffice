@@ -1,0 +1,36 @@
+<div class="dashboard-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="breadcrumb">EduSync Bridge > Dashboard</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-box" *ngFor="let stat of stats">
+      <div class="stat-icon">{{ stat.icon }}</div>
+      <div class="stat-info">
+        <p class="stat-label">{{ stat.label }}</p>
+        <p class="stat-value">{{ stat.value }}</p>
+      </div>
+      <span class="stat-badge">Módulo próximo</span>
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div class="modules-section">
+    <h2>Módulos del sistema</h2>
+    <div class="modules-grid">
+      <div class="module-card" *ngFor="let module of modules">
+        <div class="module-header">
+          <span class="module-icon">{{ module.icon }}</span>
+          <h3>{{ module.name }}</h3>
+        </div>
+        <p class="module-description">{{ module.desc }}</p>
+        <p class="module-status">En desarrollo</p>
+      </div>
+    </div>
+  </div>
+</div>

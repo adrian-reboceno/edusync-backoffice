@@ -1,0 +1,28 @@
+<aside class="sidebar" [class.collapsed]="!isExpanded">
+  <div class="sidebar-header">
+    <button class="toggle-btn" (click)="toggleSidebar()">☰</button>
+  </div>
+
+  <nav class="sidebar-menu">
+    <a href="#" class="menu-item active">
+      <span class="menu-icon">📊</span>
+      <span class="menu-text">Dashboard</span>
+    </a>
+    <a href="#" class="menu-item">
+      <span class="menu-icon">🔄</span>
+      <span class="menu-text">Sincronización</span>
+    </a>
+    <a href="#" class="menu-item">
+      <span class="menu-icon">👥</span>
+      <span class="menu-text">Usuarios</span>
+    </a>
+    <a href="#" class="menu-item">
+      <span class="menu-icon">📋</span>
+      <span class="menu-text">Reportes</span>
+    </a>
+    <a href="#" class="menu-item">
+      <span class="menu-icon">⚙️</span>
+      <span class="menu-text">Configuración</span>
+    </a>
+  </nav>
+</aside>
