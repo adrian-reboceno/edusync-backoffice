@@ -1,21 +1,184 @@
-<div class="resumen-container">
-  <div class="page-header">
-    <h1>Resumen General de Usuarios</h1>
-    <p>Estadísticas y análisis de usuarios del sistema</p>
+<div class="resumen-wrapper">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Cargando datos de usuarios...</p>
   </div>
 
-  <div class="stats-grid">
-    <div *ngFor="let stat of stats" class="stat-card" [style.borderLeftColor]="stat.color">
-      <div class="stat-icon">{{ stat.icon }}</div>
-      <div class="stat-content">
-        <p class="stat-title">{{ stat.title }}</p>
-        <p class="stat-value">{{ stat.value }}</p>
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <p class="error-text">{{ error }}</p>
+    <button (click)="retry()" class="btn-retry">Reintentar</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="data && !loading && !error" class="content">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <span>Dashboards</span>
+      <span class="separator">›</span>
+      <span class="active">Analytics Usuarios</span>
+    </div>
+
+    <!-- ===== TOP SECTION: 5 STAT CARDS ===== -->
+    <div class="stats-row">
+      <!-- Total Users -->
+      <div class="stat-card">
+        <div class="card-header">
+          <span class="card-title">TOTAL USUARIOS</span>
+          <span class="card-indicator positive">●</span>
+        </div>
+        <div class="card-content">
+          <p class="card-value">{{ totalUsers }}</p>
+          <p class="card-meta">usuarios en el sistema</p>
+        </div>
+      </div>
+
+      <!-- Activated Users -->
+      <div class="stat-card">
+        <div class="card-header">
+          <span class="card-title">ACTIVADOS</span>
+          <span class="card-indicator positive">●</span>
+        </div>
+        <div class="card-content">
+          <p class="card-value">{{ activatedUsers }}</p>
+          <p class="card-meta">{{ activationRate | number: '1.1-1' }}% del total</p>
+        </div>
+      </div>
+
+      <!-- Activation Rate -->
+      <div class="stat-card">
+        <div class="card-header">
+          <span class="card-title">TASA ACTIVACIÓN</span>
+          <span class="card-indicator warning">●</span>
+        </div>
+        <div class="card-content">
+          <p class="card-value">{{ activationRate | number: '1.1-1' }}%</p>
+          <p class="card-meta">porcentaje activado</p>
+        </div>
+      </div>
+
+      <!-- Total Sessions -->
+      <div class="stat-card">
+        <div class="card-header">
+          <span class="card-title">SESIONES TOTALES</span>
+          <span class="card-indicator positive">●</span>
+        </div>
+        <div class="card-content">
+          <p class="card-value">{{ totalSessions }}</p>
+          <p class="card-meta">{{ activeUsers }} usuarios activos</p>
+        </div>
+      </div>
+
+      <!-- Average Sessions -->
+      <div class="stat-card">
+        <div class="card-header">
+          <span class="card-title">PROMEDIO/USUARIO</span>
+          <span class="card-indicator negative">●</span>
+        </div>
+        <div class="card-content">
+          <p class="card-value">{{ avgSessions | number: '1.1-1' }}</p>
+          <p class="card-meta">sesiones por usuario</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="content-section">
-    <h2>Información</h2>
-    <p>Contenido del resumen de usuarios</p>
+    <!-- ===== BOTTOM SECTION: 3 CHARTS/SECTIONS ===== -->
+    <div class="charts-row">
+      <!-- Left: Distribution by Role -->
+      <div class="chart-card">
+        <div class="card-title">DISTRIBUCIÓN POR ROL</div>
+        <div class="role-distribution">
+          <div class="role-bar-container">
+            <div class="role-item">
+              <div class="role-label">Estudiantes</div>
+              <div class="role-bar-wrapper">
+                <div class="role-bar" 
+                     [style.width.%]="(students / totalUsers * 100)">
+                  <span class="role-value">{{ students }}</span>
+                </div>
+              </div>
+              <div class="role-percent">{{ (students / totalUsers * 100) | number: '1.0-0' }}%</div>
+            </div>
+
+            <div class="role-item">
+              <div class="role-label">Profesores</div>
+              <div class="role-bar-wrapper">
+                <div class="role-bar teacher" 
+                     [style.width.%]="(teachers / totalUsers * 100)">
+                  <span class="role-value">{{ teachers }}</span>
+                </div>
+              </div>
+              <div class="role-percent">{{ (teachers / totalUsers * 100) | number: '1.0-0' }}%</div>
+            </div>
+
+            <div class="role-item">
+              <div class="role-label">Administradores</div>
+              <div class="role-bar-wrapper">
+                <div class="role-bar admin" 
+                     [style.width.%]="(administrators / totalUsers * 100)">
+                  <span class="role-value">{{ administrators }}</span>
+                </div>
+              </div>
+              <div class="role-percent">{{ (administrators / totalUsers * 100) | number: '1.0-0' }}%</div>
+            </div>
+
+            <div class="role-item">
+              <div class="role-label">Otros</div>
+              <div class="role-bar-wrapper">
+                <div class="role-bar other" 
+                     [style.width.%]="(others / totalUsers * 100)">
+                  <span class="role-value">{{ others }}</span>
+                </div>
+              </div>
+              <div class="role-percent">{{ (others / totalUsers * 100) | number: '1.0-0' }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Sessions Overview -->
+      <div class="chart-card">
+        <div class="card-title">RESUMEN SESIONES</div>
+        <div class="sessions-overview">
+          <div class="session-stat">
+            <p class="stat-label">Total Sesiones</p>
+            <p class="stat-big-value">{{ totalSessions }}</p>
+          </div>
+          <div class="session-stat">
+            <p class="stat-label">Usuarios Activos</p>
+            <p class="stat-big-value">{{ activeUsers }}</p>
+          </div>
+          <div class="session-stat">
+            <p class="stat-label">Promedio/Usuario</p>
+            <p class="stat-big-value">{{ avgSessions | number: '1.1-1' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Organization Info -->
+      <div class="chart-card">
+        <div class="card-title">INFORMACIÓN</div>
+        <div class="org-info">
+          <div class="info-section">
+            <p class="info-label">Organización</p>
+            <p class="info-value">{{ data.organization.name }}</p>
+          </div>
+          <div class="info-section">
+            <p class="info-label">ID Organización</p>
+            <p class="info-value">{{ data.organization.id }}</p>
+          </div>
+          <div class="info-section">
+            <p class="info-label">Total Usuarios</p>
+            <p class="info-value">{{ totalUsers }}</p>
+          </div>
+          <div class="info-section">
+            <p class="info-label">Tasa Activación</p>
+            <p class="info-value">{{ activationRate | number: '1.1-1' }}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
