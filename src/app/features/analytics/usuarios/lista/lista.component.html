@@ -1,80 +1,51 @@
-<div class="lista-container">
-  <div class="page-header">
-    <h1>Lista de Usuarios</h1>
-    <p>Gestión y monitoreo de usuarios del sistema</p>
+<div class="usuarios-lista-wrapper">
+  <!-- Header -->
+  <div class="lista-header">
+    <h2>Lista de Usuarios</h2>
+    <p class="subtitle">Gestiona y visualiza todos los usuarios del sistema</p>
   </div>
 
-  <!-- Filtros -->
-  <div class="filters-card">
-    <div class="filters-header">
-      <h2>Filtros</h2>
-      <button class="btn-clear" (click)="limpiarFiltros()"
-              *ngIf="busqueda || filtroRol || filtroEstado">
-        Limpiar
-      </button>
+  <!-- Acciones -->
+  <div class="lista-actions">
+    <button class="btn btn-primary" [disabled]="selectedRows().length === 0" (click)="exportSelected()">
+      <mat-icon>download</mat-icon>
+      Exportar {{ selectedRows().length > 0 ? `(${selectedRows().length})` : '' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="lista-error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
     </div>
+  }
 
-    <div class="filters-grid">
-      <div class="filter-group">
-        <label>Búsqueda</label>
-        <input type="text" [(ngModel)]="busqueda"
-               (input)="onFiltroChange()"
-               placeholder="Nombre o email...">
+  <!-- Data Table -->
+  <app-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [total]="total()"
+    [loading]="loading()"
+    [hasActions]="true"
+    trackByKey="neo_id"
+    (pageChange)="onPageChange($event)"
+    (selectionChange)="onSelectionChange($event)">
+
+    <!-- Plantilla de acciones -->
+    <ng-template #actionsTemplate let-row="$implicit">
+      <div class="actions-cell">
+        <button class="action-btn view" title="Ver detalles" (click)="view(row)">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button class="action-btn edit" title="Editar" (click)="edit(row)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button class="action-btn delete" title="Eliminar" (click)="delete(row)">
+          <mat-icon>delete</mat-icon>
+        </button>
       </div>
+    </ng-template>
 
-      <div class="filter-group">
-        <label>Rol</label>
-        <select [(ngModel)]="filtroRol" (change)="onFiltroChange()">
-          <option value="">Todos</option>
-          <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Estado</label>
-        <select [(ngModel)]="filtroEstado" (change)="onFiltroChange()">
-          <option value="">Todos</option>
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Resultados -->
-  <div class="results-summary">
-    Se encontraron <strong>{{ usuariosFiltrados.length }}</strong> usuario(s)
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-card">
-    <table class="usuarios-table" *ngIf="usuariosFiltrados.length > 0">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th>Estado</th>
-          <th>Fecha Registro</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let usuario of usuariosFiltrados" [class.inactivo]="usuario.estado === 'inactivo'">
-          <td>{{ usuario.nombre }}</td>
-          <td>{{ usuario.email }}</td>
-          <td>{{ usuario.rol }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="usuario.estado">
-              {{ usuario.estado | uppercase }}
-            </span>
-          </td>
-          <td>{{ usuario.fechaRegistro }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="empty-state" *ngIf="usuariosFiltrados.length === 0">
-      <p>No hay usuarios que coincidan con los filtros</p>
-    </div>
-  </div>
+  </app-data-table>
 </div>
