@@ -2,6 +2,23 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
+interface OrgData {
+  id: number;
+  name: string;
+  totals: {
+    total: number;
+    activated: number;
+    never_logged_in: number;
+    activation_rate: number;
+  };
+  by_role: {
+    students: number;
+    teachers: number;
+    administrators: number;
+    others: number;
+  };
+}
+
 @Component({
   selector: 'app-usuarios-resumen',
   standalone: true,
@@ -13,6 +30,8 @@ export class UsuariosResumenComponent implements OnInit {
   loading = true;
   error: string | null = null;
   data: any = null;
+  organizations: OrgData[] = [];
+  selectedOrgIndex = 0;
 
   constructor(
     private http: HttpClient,
@@ -36,23 +55,32 @@ export class UsuariosResumenComponent implements OnInit {
       next: (response: any) => {
         console.log('[SUCCESS] Datos recibidos:', response);
         this.data = response.data;
+        this.organizations = response.data.organizations || [];
+        this.selectedOrgIndex = 0;
         this.loading = false;
-        this.cdr.markForCheck();  // ← CLAVE: Fuerza detección de cambios
-        console.log('[SUCCESS] Data asignada, loading=false, change detection triggered');
+        this.cdr.markForCheck();
+        console.log('[SUCCESS] Data asignada, loading=false');
       },
       error: (err: any) => {
         console.error('[ERROR] Error en petición:', err);
         this.loading = false;
         this.error = 'Error al cargar datos';
-        this.cdr.markForCheck();  // ← También aquí
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  selectOrganization(index: number): void {
+    console.log('[SELECT] Cambiando a organización index:', index);
+    this.selectedOrgIndex = index;
+    this.cdr.markForCheck();
   }
 
   retry(): void {
     this.loadData();
   }
 
+  // ===== GETTERS DATOS GLOBALES =====
   get totalUsers(): number {
     return this.data?.totals?.total ?? 0;
   }
@@ -91,5 +119,38 @@ export class UsuariosResumenComponent implements OnInit {
 
   get others(): number {
     return this.data?.by_role?.others ?? 0;
+  }
+
+  // ===== GETTERS ORGANIZACIÓN SELECCIONADA =====
+  get selectedOrg(): OrgData | null {
+    return this.organizations[this.selectedOrgIndex] || null;
+  }
+
+  get orgTotalUsers(): number {
+    return this.selectedOrg?.totals?.total ?? 0;
+  }
+
+  get orgActivatedUsers(): number {
+    return this.selectedOrg?.totals?.activated ?? 0;
+  }
+
+  get orgActivationRate(): number {
+    return this.selectedOrg?.totals?.activation_rate ?? 0;
+  }
+
+  get orgStudents(): number {
+    return this.selectedOrg?.by_role?.students ?? 0;
+  }
+
+  get orgTeachers(): number {
+    return this.selectedOrg?.by_role?.teachers ?? 0;
+  }
+
+  get orgAdministrators(): number {
+    return this.selectedOrg?.by_role?.administrators ?? 0;
+  }
+
+  get orgOthers(): number {
+    return this.selectedOrg?.by_role?.others ?? 0;
   }
 }

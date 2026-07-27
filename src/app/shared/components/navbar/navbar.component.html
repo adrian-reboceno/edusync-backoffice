@@ -1,77 +1,117 @@
-<nav class="navbar">
-  <ul class="nav-menu">
-    <!-- ===== DASHBOARD ===== -->
-    <li class="nav-menu-item">
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
-        <span class="nav-icon">📊</span>
-        Dashboard
-      </a>
-    </li>
+<nav class="navbar-wrapper">
+  <!-- Brand -->
+  <div class="navbar-brand">
+    <div class="brand-icon">
+      <mat-icon>dashboard</mat-icon>
+    </div>
+    <span class="brand-name">EduSync</span>
+  </div>
 
-    <!-- ===== ANALYTICS - USUARIOS ===== -->
-    <li class="nav-menu-item dropdown">
-      <a href="#" class="nav-link" (click)="toggleAnalyticsMenu($event)">
-        <span class="nav-icon">📈</span>
-        Analytics Usuarios
-        <span class="dropdown-arrow" [class.open]="showAnalyticsMenu">▼</span>
-      </a>
-      <div class="dropdown-menu" *ngIf="showAnalyticsMenu">
-        <div class="dropdown-section">
-          <a routerLink="/analytics/usuarios/resumen" 
+  <!-- Horizontal Menu -->
+  <div class="navbar-menu-container">
+    <ul class="navbar-menu" role="menubar">
+      <!-- DASHBOARD ITEM (sin dropdown) -->
+      <li class="menu-item-wrapper">
+        <a routerLink="/dashboard"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           class="menu-item"
+           (click)="closeMenus()">
+          <mat-icon class="menu-icon">dashboard</mat-icon>
+          <span class="menu-label">Dashboard</span>
+        </a>
+      </li>
+
+      <!-- ANALYTICS USUARIOS ITEM (con dropdown) -->
+      <li class="menu-item-wrapper">
+        <button class="menu-item menu-dropdown"
+                [class.open]="activeMenuIndex === 1"
+                (click)="toggleMenu(1)"
+                type="button">
+          <mat-icon class="menu-icon">analytics</mat-icon>
+          <span class="menu-label">Analytics Usuarios</span>
+          <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+        </button>
+
+        <!-- Dropdown submenu - USAR [hidden] EN LUGAR DE *ngIf -->
+        <div class="dropdown-submenu" [hidden]="activeMenuIndex !== 1">
+          <a routerLink="/analytics/usuarios/resumen"
              routerLinkActive="active"
-             (click)="closeMenus()"
-             class="dropdown-item">
-            <span class="item-icon">📋</span> Resumen general
+             class="submenu-item"
+             (click)="closeMenus()">
+            <mat-icon class="submenu-icon">summarize</mat-icon>
+            <span class="submenu-label">Resumen General</span>
           </a>
-          <a routerLink="/analytics/usuarios/lista" 
+          <a routerLink="/analytics/usuarios/lista"
              routerLinkActive="active"
-             (click)="closeMenus()"
-             class="dropdown-item">
-            <span class="item-icon">📑</span> Lista de usuarios
+             class="submenu-item"
+             (click)="closeMenus()">
+            <mat-icon class="submenu-icon">people</mat-icon>
+            <span class="submenu-label">Lista de Usuarios</span>
           </a>
         </div>
-      </div>
-    </li>
-  </ul>
+      </li>
+    </ul>
+  </div>
 
-  <div class="navbar-right">
+  <!-- Spacer -->
+  <div class="navbar-spacer"></div>
+
+  <!-- Right Actions -->
+  <div class="navbar-actions">
     <!-- Notifications -->
-    <button class="notification-btn" (click)="toggleNotifications()">
-      <span class="bell-icon">🔔</span>
-      <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+    <button class="icon-btn notifications-btn"
+            type="button"
+            title="Notificaciones">
+      <mat-icon class="notification-icon">notifications</mat-icon>
+      <span class="notification-badge">3</span>
     </button>
 
-    <!-- Notifications Dropdown -->
-    <div class="notifications-dropdown" *ngIf="showNotifications">
-      <div class="notifications-header">
-        <h3>Notificaciones</h3>
-        <button class="clear-btn" (click)="clearAllNotifications()">Limpiar</button>
-      </div>
-      <div class="notifications-list">
-        <div *ngIf="notifications.length === 0" class="no-notifications">
-          No hay notificaciones
-        </div>
-        <div *ngFor="let notif of notifications" class="notification-item" [class]="notif.type">
-          <p>{{ notif.message }}</p>
-          <button class="view-btn" (click)="viewNotification(notif)">Ver</button>
-        </div>
-      </div>
-    </div>
+    <!-- Divider -->
+    <div class="navbar-divider"></div>
 
-    <!-- User Profile -->
-    <div class="user-profile" (click)="toggleUserMenu()">
-      <div class="user-avatar">{{ user?.first_name?.charAt(0) }}</div>
-      <div class="user-info">
-        <p class="user-name">{{ user?.first_name }} {{ user?.last_name }}</p>
-        <p class="user-role">Administrador</p>
-      </div>
-      <span class="dropdown-icon">▼</span>
+    <!-- User Profile Pill -->
+    <div class="user-profile-wrapper">
+      <button class="user-pill"
+              (click)="toggleUserMenu()"
+              type="button">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <p class="user-name">{{ userName }}</p>
+          <p class="user-role">{{ userRole }}</p>
+        </div>
+        <mat-icon class="user-chevron" [class.open]="showUserMenu">expand_more</mat-icon>
+      </button>
 
-      <div class="user-dropdown" *ngIf="showUserMenu">
-        <a href="#" class="dropdown-item">Mi Perfil</a>
-        <a href="#" class="dropdown-item">Configuración</a>
-        <hr>
-        <a href="#" class="dropdown-item logout" (click)="logout()">Cerrar sesión</a>
+      <!-- User Dropdown Menu -->
+      <div class="user-dropdown" [hidden]="!showUserMenu">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar">{{ userInitials }}</div>
+          <div class="dropdown-info">
+            <p class="dropdown-name">{{ userName }}</p>
+            <p class="dropdown-email">{{ userEmail }}</p>
+          </div>
+        </div>
+
+        <div class="dropdown-divider"></div>
+
+        <a href="#" class="dropdown-item" (click)="$event.preventDefault()">
+          <mat-icon class="item-icon">settings</mat-icon>
+          <span class="item-label">Configuración</span>
+        </a>
+        <a href="#" class="dropdown-item" (click)="$event.preventDefault()">
+          <mat-icon class="item-icon">person</mat-icon>
+          <span class="item-label">Mi Perfil</span>
+        </a>
+
+        <div class="dropdown-divider"></div>
+
+        <button class="dropdown-item logout-btn"
+                (click)="logout()"
+                type="button">
+          <mat-icon class="item-icon">logout</mat-icon>
+          <span class="item-label">Cerrar Sesión</span>
+        </button>
       </div>
     </div>
   </div>

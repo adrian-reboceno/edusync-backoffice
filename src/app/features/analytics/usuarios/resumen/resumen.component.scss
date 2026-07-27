@@ -89,10 +89,10 @@
   }
 }
 
-// ===== TOP STATS ROW - FILA HORIZONTAL DE 5 CARDS =====
+// ===== TOP STATS ROW - 5 CARDS HORIZONTALES =====
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);  // ← 5 COLUMNAS FIJAS
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   margin-bottom: 30px;
 }
@@ -159,10 +159,75 @@
   }
 }
 
+// ===== ORGANIZATION SELECTOR =====
+.org-selector-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 30px;
+
+  h2 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #7f8c8d;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .org-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .org-tab {
+    background: #f8f9fa;
+    color: #7f8c8d;
+    border: 1px solid #ecf0f1;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    &.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+  }
+
+  .selected-org-info {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+
+    p {
+      margin: 0;
+      color: #2c3e50;
+
+      .org-id {
+        color: #95a5a6;
+        margin-left: 8px;
+      }
+    }
+  }
+}
+
 // ===== BOTTOM CHARTS ROW =====
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
@@ -243,13 +308,13 @@
   }
 }
 
-// ===== SESSIONS OVERVIEW =====
-.sessions-overview {
+// ===== ORGANIZATION STATS =====
+.org-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 
-  .session-stat {
+  .stat-box {
     background: #f8f9fa;
     padding: 14px;
     border-radius: 6px;
@@ -272,19 +337,19 @@
   }
 }
 
-// ===== ORGANIZATION INFO =====
-.org-info {
+// ===== GLOBAL SUMMARY =====
+.global-summary {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 
-  .info-section {
+  .summary-stat {
     background: #f8f9fa;
     padding: 14px;
     border-radius: 6px;
     border-left: 3px solid #3498db;
 
-    .info-label {
+    .summary-label {
       font-size: 10px;
       font-weight: 600;
       color: #95a5a6;
@@ -292,9 +357,16 @@
       margin: 0 0 6px 0;
     }
 
-    .info-value {
-      font-size: 14px;
+    .summary-value {
+      font-size: 18px;
       font-weight: 700;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .summary-value-small {
+      font-size: 11px;
+      font-weight: 600;
       color: #2c3e50;
       margin: 0;
       word-break: break-word;
@@ -319,7 +391,7 @@
 
 @media (max-width: 1024px) {
   .stats-row {
-    grid-template-columns: repeat(5, 1fr);  // Mantener 5 columnas
+    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
   }
 
@@ -350,7 +422,7 @@
   }
 
   .stats-row {
-    grid-template-columns: repeat(2, 1fr);  // 2 columnas en tablet
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 
@@ -366,6 +438,19 @@
     }
   }
 
+  .org-selector-section {
+    padding: 16px;
+
+    .org-tabs {
+      flex-direction: column;
+    }
+
+    .org-tab {
+      width: 100%;
+      text-align: left;
+    }
+  }
+
   .charts-row {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -375,11 +460,11 @@
     padding: 16px;
   }
 
-  .sessions-overview {
+  .org-stats {
     grid-template-columns: 1fr;
   }
 
-  .org-info {
+  .global-summary {
     grid-template-columns: 1fr;
   }
 }
@@ -390,7 +475,7 @@
   }
 
   .stats-row {
-    grid-template-columns: 1fr;  // 1 columna en mobile
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
@@ -411,6 +496,20 @@
 
     .card-content .card-meta {
       font-size: 10px;
+    }
+  }
+
+  .org-selector-section {
+    padding: 12px;
+    margin-bottom: 20px;
+
+    .org-tabs {
+      flex-direction: column;
+    }
+
+    .org-tab {
+      width: 100%;
+      font-size: 11px;
     }
   }
 
