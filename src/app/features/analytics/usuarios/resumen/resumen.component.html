@@ -21,7 +21,7 @@
       <span class="active">Analytics Usuarios</span>
     </div>
 
-    <!-- ===== TOP SECTION: 5 STAT CARDS ===== -->
+    <!-- ===== TOP SECTION: 5 STAT CARDS (DATOS GLOBALES) ===== -->
     <div class="stats-row">
       <!-- Total Users -->
       <div class="stat-card">
@@ -84,98 +84,119 @@
       </div>
     </div>
 
-    <!-- ===== BOTTOM SECTION: 3 CHARTS/SECTIONS ===== -->
-    <div class="charts-row">
+    <!-- ===== ORGANIZATION SELECTOR ===== -->
+    <div class="org-selector-section" *ngIf="organizations.length > 0">
+      <h2>SELECCIONAR ORGANIZACIÓN</h2>
+      <div class="org-tabs">
+        <button *ngFor="let org of organizations; let i = index"
+                class="org-tab"
+                [class.active]="selectedOrgIndex === i"
+                (click)="selectOrganization(i)">
+          {{ org.name }}
+        </button>
+      </div>
+      
+      <!-- Selected Org Info -->
+      <div *ngIf="selectedOrg" class="selected-org-info">
+        <p>
+          <strong>{{ selectedOrg.name }}</strong>
+          <span class="org-id">(ID: {{ selectedOrg.id }})</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- ===== BOTTOM SECTION: 3 CHARTS/SECTIONS (POR ORGANIZACIÓN) ===== -->
+    <div class="charts-row" *ngIf="selectedOrg">
       <!-- Left: Distribution by Role -->
       <div class="chart-card">
-        <div class="card-title">DISTRIBUCIÓN POR ROL</div>
+        <div class="card-title">DISTRIBUCIÓN POR ROL - {{ selectedOrg.name }}</div>
         <div class="role-distribution">
           <div class="role-bar-container">
             <div class="role-item">
               <div class="role-label">Estudiantes</div>
               <div class="role-bar-wrapper">
                 <div class="role-bar" 
-                     [style.width.%]="(students / totalUsers * 100)">
-                  <span class="role-value">{{ students }}</span>
+                     [style.width.%]="orgTotalUsers > 0 ? (orgStudents / orgTotalUsers * 100) : 0">
+                  <span class="role-value">{{ orgStudents }}</span>
                 </div>
               </div>
-              <div class="role-percent">{{ (students / totalUsers * 100) | number: '1.0-0' }}%</div>
+              <div class="role-percent">{{ orgTotalUsers > 0 ? (orgStudents / orgTotalUsers * 100 | number: '1.0-0') : 0 }}%</div>
             </div>
 
             <div class="role-item">
               <div class="role-label">Profesores</div>
               <div class="role-bar-wrapper">
                 <div class="role-bar teacher" 
-                     [style.width.%]="(teachers / totalUsers * 100)">
-                  <span class="role-value">{{ teachers }}</span>
+                     [style.width.%]="orgTotalUsers > 0 ? (orgTeachers / orgTotalUsers * 100) : 0">
+                  <span class="role-value">{{ orgTeachers }}</span>
                 </div>
               </div>
-              <div class="role-percent">{{ (teachers / totalUsers * 100) | number: '1.0-0' }}%</div>
+              <div class="role-percent">{{ orgTotalUsers > 0 ? (orgTeachers / orgTotalUsers * 100 | number: '1.0-0') : 0 }}%</div>
             </div>
 
             <div class="role-item">
               <div class="role-label">Administradores</div>
               <div class="role-bar-wrapper">
                 <div class="role-bar admin" 
-                     [style.width.%]="(administrators / totalUsers * 100)">
-                  <span class="role-value">{{ administrators }}</span>
+                     [style.width.%]="orgTotalUsers > 0 ? (orgAdministrators / orgTotalUsers * 100) : 0">
+                  <span class="role-value">{{ orgAdministrators }}</span>
                 </div>
               </div>
-              <div class="role-percent">{{ (administrators / totalUsers * 100) | number: '1.0-0' }}%</div>
+              <div class="role-percent">{{ orgTotalUsers > 0 ? (orgAdministrators / orgTotalUsers * 100 | number: '1.0-0') : 0 }}%</div>
             </div>
 
             <div class="role-item">
               <div class="role-label">Otros</div>
               <div class="role-bar-wrapper">
                 <div class="role-bar other" 
-                     [style.width.%]="(others / totalUsers * 100)">
-                  <span class="role-value">{{ others }}</span>
+                     [style.width.%]="orgTotalUsers > 0 ? (orgOthers / orgTotalUsers * 100) : 0">
+                  <span class="role-value" *ngIf="orgOthers > 0">{{ orgOthers }}</span>
                 </div>
               </div>
-              <div class="role-percent">{{ (others / totalUsers * 100) | number: '1.0-0' }}%</div>
+              <div class="role-percent">{{ orgTotalUsers > 0 ? (orgOthers / orgTotalUsers * 100 | number: '1.0-0') : 0 }}%</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Center: Sessions Overview -->
+      <!-- Center: Organization Stats -->
       <div class="chart-card">
-        <div class="card-title">RESUMEN SESIONES</div>
-        <div class="sessions-overview">
-          <div class="session-stat">
-            <p class="stat-label">Total Sesiones</p>
-            <p class="stat-big-value">{{ totalSessions }}</p>
+        <div class="card-title">ESTADÍSTICAS - {{ selectedOrg.name }}</div>
+        <div class="org-stats">
+          <div class="stat-box">
+            <p class="stat-label">Total Usuarios</p>
+            <p class="stat-big-value">{{ orgTotalUsers }}</p>
           </div>
-          <div class="session-stat">
-            <p class="stat-label">Usuarios Activos</p>
-            <p class="stat-big-value">{{ activeUsers }}</p>
+          <div class="stat-box">
+            <p class="stat-label">Activados</p>
+            <p class="stat-big-value">{{ orgActivatedUsers }}</p>
           </div>
-          <div class="session-stat">
-            <p class="stat-label">Promedio/Usuario</p>
-            <p class="stat-big-value">{{ avgSessions | number: '1.1-1' }}</p>
+          <div class="stat-box">
+            <p class="stat-label">Tasa Activación</p>
+            <p class="stat-big-value">{{ orgActivationRate | number: '1.1-1' }}%</p>
           </div>
         </div>
       </div>
 
-      <!-- Right: Organization Info -->
+      <!-- Right: Global Summary -->
       <div class="chart-card">
-        <div class="card-title">INFORMACIÓN</div>
-        <div class="org-info">
-          <div class="info-section">
-            <p class="info-label">Organización</p>
-            <p class="info-value">{{ data.organization.name }}</p>
+        <div class="card-title">RESUMEN GLOBAL</div>
+        <div class="global-summary">
+          <div class="summary-stat">
+            <p class="summary-label">Total General</p>
+            <p class="summary-value">{{ totalUsers }}</p>
           </div>
-          <div class="info-section">
-            <p class="info-label">ID Organización</p>
-            <p class="info-value">{{ data.organization.id }}</p>
+          <div class="summary-stat">
+            <p class="summary-label">Organizaciones</p>
+            <p class="summary-value">{{ organizations.length }}</p>
           </div>
-          <div class="info-section">
-            <p class="info-label">Total Usuarios</p>
-            <p class="info-value">{{ totalUsers }}</p>
+          <div class="summary-stat">
+            <p class="summary-label">Sesiones Totales</p>
+            <p class="summary-value">{{ totalSessions }}</p>
           </div>
-          <div class="info-section">
-            <p class="info-label">Tasa Activación</p>
-            <p class="info-value">{{ activationRate | number: '1.1-1' }}%</p>
+          <div class="summary-stat">
+            <p class="summary-label">Última Sincronización</p>
+            <p class="summary-value-small">{{ data.last_synced_at }}</p>
           </div>
         </div>
       </div>
