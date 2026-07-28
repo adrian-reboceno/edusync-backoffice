@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { DataTableComponent, DataTableColumn, DataTablePageEvent } from '../../../../shared/components/data-table/data-table.component';
 import { UsuarioDetalleComponent } from './usuario-detalle/usuario-detalle.component';
+import { ConfigService } from '../../../../core/services/config.service';
 
 /** Columnas que el backend acepta en `order_by` (GetUsersListRequest). */
 const ORDERABLE = ['last_login_at', 'first_login_at', 'joined_at', 'first_name', 'last_name'];
@@ -38,7 +39,11 @@ export class UsuariosListaComponent implements OnInit {
     { key: 'activated_label', label: 'Estado', sortable: false },
   ];
 
-  constructor(private http: HttpClient, private dialog: MatDialog) {}
+  constructor(
+    private http: HttpClient,
+    private dialog: MatDialog,
+    private configService: ConfigService
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -81,7 +86,7 @@ export class UsuariosListaComponent implements OnInit {
       params = params.set('search', search);
     }
 
-    const url = 'http://localhost:8000/api/v1/analytics/users';
+    const url = this.configService.analyticsUsersUrl;
 
     this.http.get<any>(url, { params }).subscribe({
       next: (response) => {

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { ConfigService } from '../../../../core/services/config.service';
 
 interface OrgData {
   id: number;
@@ -35,7 +36,8 @@ export class UsuariosResumenComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private configService: ConfigService
   ) {
     console.log('[CONSTRUCTOR] UsuariosResumenComponent inicializado');
   }
@@ -48,7 +50,7 @@ export class UsuariosResumenComponent implements OnInit {
   loadData(): void {
     console.log('[loadData] Iniciando carga...');
     
-    const url = 'http://localhost:8000/api/v1/analytics/users/summary';
+    const url = this.configService.analyticsUsersSummaryUrl;
     console.log('[loadData] URL:', url);
 
     this.http.get<any>(url).subscribe({

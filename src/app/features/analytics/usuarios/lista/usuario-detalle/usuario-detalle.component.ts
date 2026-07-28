@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ConfigService } from '../../../../../core/services/config.service';
 
 export interface UsuarioDetalleData {
   neoId: number;
@@ -204,6 +205,7 @@ export class UsuarioDetalleComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
+    private configService: ConfigService,
     public dialogRef: MatDialogRef<UsuarioDetalleComponent>,
     @Inject(MAT_DIALOG_DATA) public data: UsuarioDetalleData
   ) {}
@@ -217,7 +219,7 @@ export class UsuarioDetalleComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const url = `http://localhost:8000/api/v1/analytics/users/${this.data.neoId}`;
+    const url = this.configService.getUserDetailUrl(this.data.neoId);
 
     this.http.get<any>(url).subscribe({
       next: (response) => {

@@ -1,83 +1,89 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-
-interface MenuItem {
-  label: string;
-  icon?: string;
-  path?: string;
-  children?: MenuItem[];
-}
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit {
-  activeMenuIndex: number | null = null;
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  isAnalyticsOpen = false;
   showUserMenu = false;
 
-  userName = 'Super Admin';
-  userEmail = 'admin@edusync.com';
-  userRole = 'Administrador';
-  userInitials = 'SA';
-
-  constructor(private router: Router) {}
-
   ngOnInit(): void {
-    this.loadUserInfo();
+    console.log('NavbarComponent initialized');
   }
 
-  loadUserInfo(): void {
-    const authData = localStorage.getItem('auth_data');
-    if (authData) {
-      try {
-        const auth = JSON.parse(authData);
-        this.userName = auth.name || 'Usuario';
-        this.userEmail = auth.email || 'user@edusync.com';
-        this.userRole = auth.role || 'Usuario';
-        this.userInitials = this.getInitials(this.userName);
-      } catch (e) {
-        console.error('Error parsing auth data:', e);
-      }
-    }
+  // Obtener información DIRECTA del AuthService (sin duplicar estado)
+  get userName(): string {
+    const user = this.authService.getUser() || {};
+    return (user as any)?.name || (user as any)?.email || 'Usuario';
   }
 
-  getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map((n) => n.charAt(0).toUpperCase())
-      .join('')
-      .slice(0, 2);
+  get userEmail(): string {
+    const user = this.authService.getUser() || {};
+    return (user as any)?.email || 'sin-email@example.com';
   }
 
-  toggleMenu(index: number): void {
-    console.log('Toggle menu index:', index, 'current:', this.activeMenuIndex);
-    this.activeMenuIndex = this.activeMenuIndex === index ? null : index;
-    this.showUserMenu = false;
+  get userInitials(): string {
+    const name = this.userName;
+    return name.charAt(0).toUpperCase();
   }
 
-  closeMenus(): void {
-    this.activeMenuIndex = null;
+  get userRole(): string {
+    const user = this.authService.getUser() || {};
+    return (user as any)?.role || 'Sin rol';
+  }
+
+  toggleAnalyticsMenu(): void {
+    this.isAnalyticsOpen = !this.isAnalyticsOpen;
   }
 
   toggleUserMenu(): void {
     this.showUserMenu = !this.showUserMenu;
-    this.activeMenuIndex = null;
   }
 
-  isMenuOpen(index: number): boolean {
-    const isOpen = this.activeMenuIndex === index;
-    console.log('isMenuOpen check - index:', index, 'activeMenuIndex:', this.activeMenuIndex, 'result:', isOpen);
-    return isOpen;
+  async logout(): Promise<void> {
+    console.log('🚪 Iniciando logout...');
+    
+    try {
+      // Limpiar localStorage
+      localStorage.removeItem('auth_data');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      
+      // Llamar al servicio de logout
+      await this.authService.logout();
+      
+      console.log('✅ Logout exitoso');
+      
+      // Redirigir al login
+      setTimeout(() => {
+        this.router.navigate(['/auth/login']);
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ Error en logout:', error);
+      
+      // Limpiar manualmente de todas formas
+      localStorage.removeItem('auth_data');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      
+      this.router.navigate(['/auth/login']);
+    }
   }
 
-  logout(): void {
-    localStorage.removeItem('auth_data');
-    this.router.navigate(['/login']);
+  closeMenus(): void {
+    this.isAnalyticsOpen = false;
+    this.showUserMenu = false;
   }
 }
