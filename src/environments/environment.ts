@@ -1,0 +1,17 @@
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api/v1',
+  appName: 'EduSync Bridge BackOffice',
+  inactivityTimeoutMinutes: 30,
+  endpoints: {
+    auth: {
+      login: '/auth/login',
+      logout: '/auth/logout',
+    },
+    analytics: {
+      users: '/analytics/users',
+      usersSummary: '/analytics/users/summary',
+      userDetail: (neoId: number) => `/analytics/users/${neoId}`,
+    },
+  },
+};

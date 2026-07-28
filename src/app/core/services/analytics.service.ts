@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 export interface AnalyticsSummary {
   data: {
@@ -37,11 +38,12 @@ export interface AnalyticsSummary {
   providedIn: 'root'
 })
 export class AnalyticsService {
-  private apiUrl = 'http://localhost:8000/api/v1/analytics/users/summary';
-
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {}
 
   getUsersSummary(): Observable<AnalyticsSummary> {
-    return this.http.get<AnalyticsSummary>(this.apiUrl);
+    return this.http.get<AnalyticsSummary>(this.configService.analyticsUsersSummaryUrl);
   }
 }

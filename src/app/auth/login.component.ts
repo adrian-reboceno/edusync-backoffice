@@ -1,95 +1,88 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from './services/auth.service';
-import { AlertService } from '../core/services/alert.service';
+import { ToastService } from '../core/services/toast.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
+  private authService = inject(AuthService);
+  private toastService = inject(ToastService);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+
   loginForm!: FormGroup;
   loading = false;
-  error: string | null = null;
   showPassword = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private alertService: AlertService,
-    private router: Router
-  ) {}
-
   ngOnInit(): void {
-    // Limpiar datos del formulario al abrir login
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    this.initForm();
+    localStorage.clear();
+
+    if (this.authService.isUserAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+    }
+
+    this.initializeForm();
   }
 
-  private initForm(): void {
+  private initializeForm(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
-      totp_code: ['', [Validators.required, Validators.minLength(6)]],
+      totp_code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
       rememberMe: [false]
     });
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
-      this.alertService.error('Validación', 'Por favor completa todos los campos correctamente');
+      this.toastService.warning(
+        'Campos inválidos',
+        'Por favor, completa todos los campos correctamente'
+      );
       return;
     }
 
     this.loading = true;
-    this.error = null;
 
-    const credentials = {
-      email: this.loginForm.get('email')?.value,
-      password: this.loginForm.get('password')?.value,
-      totp_code: this.loginForm.get('totp_code')?.value
-    };
+    try {
+      const { email, password, totp_code } = this.loginForm.value;
 
-    console.log('📤 Enviando:', credentials);
+      const success = await this.authService.login(
+        email,
+        password,
+        totp_code || undefined
+      );
 
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
-        console.log('✅ Login exitoso:', response);
-        this.loading = false;
-        
-        if (response.data.access_token) {
-          this.alertService.success(
-            'Bienvenido',
-            `¡Hola ${response.data.user.first_name}! Login exitoso.`
-          );
-
-          setTimeout(() => {
-            this.router.navigate(['/dashboard']);
-          }, 1500);
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        console.error('❌ Error:', err);
-        
-        const errorMessage = err.error?.message || 'No se pudo iniciar sesión. Verifica tus credenciales.';
-        
-        this.alertService.error(
-          'Error de autenticación',
-          errorMessage
-        );
+      if (success) {
+        console.log('✅ Login exitoso, redirigiendo...');
       }
-    });
+    } catch (error: any) {
+      console.error('Error en login:', error);
+      this.toastService.error(
+        'Error',
+        error?.message || 'Ocurrió un error durante el login'
+      );
+    } finally {
+      this.loading = false;
+    }
   }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && this.loginForm.valid) {
+      this.onSubmit();
+    }
   }
 }

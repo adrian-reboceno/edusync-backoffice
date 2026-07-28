@@ -25,8 +25,8 @@
       <!-- ANALYTICS USUARIOS ITEM (con dropdown) -->
       <li class="menu-item-wrapper">
         <button class="menu-item menu-dropdown"
-                [class.open]="activeMenuIndex === 1"
-                (click)="toggleMenu(1)"
+                [class.open]="isAnalyticsOpen"
+               (click)="toggleAnalyticsMenu()"
                 type="button">
           <mat-icon class="menu-icon">analytics</mat-icon>
           <span class="menu-label">Analytics Usuarios</span>
@@ -34,7 +34,7 @@
         </button>
 
         <!-- Dropdown submenu - USAR [hidden] EN LUGAR DE *ngIf -->
-        <div class="dropdown-submenu" [hidden]="activeMenuIndex !== 1">
+        <div class="dropdown-submenu" [hidden]="!isAnalyticsOpen">
           <a routerLink="/analytics/usuarios/resumen"
              routerLinkActive="active"
              class="submenu-item"
