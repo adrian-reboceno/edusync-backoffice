@@ -5,6 +5,7 @@ import { MainLayoutComponent } from './shared/layout/main-layout.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { UsuariosResumenComponent } from './features/analytics/usuarios/resumen/resumen.component';
 import { UsuariosListaComponent } from './features/analytics/usuarios/lista/lista.component';
+import { UsuarioDetailComponent } from './features/analytics/usuarios/detail/usuario-detail.component';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,10 @@ export const routes: Routes = [
       {
         path: 'analytics/usuarios/lista',
         component: UsuariosListaComponent
+      },
+      {
+        path: 'analytics/usuarios/:neoId/detail',
+        component: UsuarioDetailComponent
       },
       {
         path: '',

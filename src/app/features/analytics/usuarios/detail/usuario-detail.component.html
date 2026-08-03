@@ -1,0 +1,345 @@
+<div class="usuario-detail-wrapper">
+  <!-- Breadcrumb Header - Minimal -->
+  <div class="breadcrumb-section">
+    <div class="breadcrumb-path">
+      <a href="#" (click)="goBack(); $event.preventDefault()" class="breadcrumb-link">EduSync</a>
+      <span class="breadcrumb-separator">></span>
+      <a href="#" (click)="goBack(); $event.preventDefault()" class="breadcrumb-link">Analytics Usuarios</a>
+      <span class="breadcrumb-separator">></span>
+      <span class="breadcrumb-current">{{ nombreCompleto }}</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading()">
+    <p>Cargando detalles del usuario...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error() && !loading()">
+    <p>{{ error() }}</p>
+  </div>
+
+  <!-- Content -->
+  <div class="detail-content" *ngIf="usuarioDetail() && !loading()">
+    <!-- User Info Header Card -->
+    <div class="user-header">
+      <div class="user-avatar">{{ iniciales }}</div>
+      <div class="user-basic-info">
+        <h2>{{ nombreCompleto }}</h2>
+        <p class="userid">{{ usuarioDetail()?.user?.userid }}</p>
+        <div class="user-meta">
+          <span class="role">{{ usuarioDetail()?.user?.roles?.[0] }}</span>
+          <span class="org">{{ usuarioDetail()?.user?.organization_name }}</span>
+          <span class="status" [class.active]="usuarioDetail()?.user?.activated">
+            {{ usuarioDetail()?.user?.activated ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group class="detail-tabs">
+      <!-- Overview Tab -->
+      <mat-tab label="Resumen General">
+        <ng-template mat-tab-label>
+          <mat-icon>summary</mat-icon>
+          <span>Resumen General</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="info-icon sessions">
+                <mat-icon>login</mat-icon>
+              </div>
+              <div class="info-details">
+                <p class="info-value">{{ usuarioDetail()?.sessions_summary?.total_sessions }}</p>
+                <p class="info-label">Total Sesiones</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon hours">
+                <mat-icon>schedule</mat-icon>
+              </div>
+              <div class="info-details">
+                <p class="info-value">{{ usuarioDetail()?.sessions_summary?.total_hours | number:'1.1-2' }}</p>
+                <p class="info-label">Horas Totales</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon duration">
+                <mat-icon>timer</mat-icon>
+              </div>
+              <div class="info-details">
+                <p class="info-value">{{ usuarioDetail()?.sessions_summary?.avg_duration_minutes | number:'1.1-2' }}</p>
+                <p class="info-label">Duración Promedio (min)</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon days">
+                <mat-icon>calendar_today</mat-icon>
+              </div>
+              <div class="info-details">
+                <p class="info-value">{{ usuarioDetail()?.user?.days_since_last_login }}</p>
+                <p class="info-label">Días Desde Último Acceso</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personal Information -->
+          <div class="section">
+            <h3>Información Personal</h3>
+            <div class="info-list">
+              <div class="info-row">
+                <span class="label">ID NEO:</span>
+                <span class="value">{{ usuarioDetail()?.user?.neo_id }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Usuario:</span>
+                <span class="value">{{ usuarioDetail()?.user?.userid }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Email:</span>
+                <span class="value">{{ usuarioDetail()?.user?.email || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Organización:</span>
+                <span class="value">{{ usuarioDetail()?.user?.organization_name }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Idioma:</span>
+                <span class="value">{{ usuarioDetail()?.user?.language }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Zona Horaria:</span>
+                <span class="value">{{ usuarioDetail()?.user?.time_zone }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Fecha de Ingreso:</span>
+                <span class="value">{{ formatDate(usuarioDetail()?.user?.joined_at || null) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Primer Acceso:</span>
+                <span class="value">{{ formatDateTime(usuarioDetail()?.user?.first_login_at || null) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Último Acceso:</span>
+                <span class="value">{{ formatDateTime(usuarioDetail()?.user?.last_login_at || null) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Sessions Tab -->
+      <mat-tab label="Sesiones">
+        <ng-template mat-tab-label>
+          <mat-icon>history</mat-icon>
+          <span>Sesiones ({{ usuarioDetail()?.sessions_summary?.total_sessions }})</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="sessions-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Login</th>
+                  <th>Logout</th>
+                  <th>Duración (min)</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let session of usuarioDetail()?.sessions">
+                  <td>{{ formatDateTime(session.login_at) }}</td>
+                  <td>{{ formatDateTime(session.logout_at) }}</td>
+                  <td>{{ session.duration_minutes }}</td>
+                  <td class="ip">{{ session.ip_address }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Classes Tab -->
+      <mat-tab label="Clases">
+        <ng-template mat-tab-label>
+          <mat-icon>school</mat-icon>
+          <span>Clases Enrolladas ({{ usuarioDetail()?.classes?.length }})</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="classes-list">
+            <div *ngFor="let clase of usuarioDetail()?.classes" class="class-card">
+              <div class="class-header">
+                <h4>{{ clase.class_name }}</h4>
+                <span class="class-status" [class.started]="clase.started" [class.completed]="clase.completed">
+                  {{ clase.completed ? 'Completado' : clase.started ? 'Iniciado' : 'No Iniciado' }}
+                </span>
+              </div>
+              <div class="class-details">
+                <div class="detail">
+                  <span class="label">Rango de Fechas:</span>
+                  <span class="value">{{ formatDate(clase.start_at) }} - {{ formatDate(clase.finish_at) }}</span>
+                </div>
+                <div class="detail">
+                  <span class="label">Tipo de Inscripción:</span>
+                  <span class="value">{{ clase.enroll_type }}</span>
+                </div>
+                <div class="detail">
+                  <span class="label">Tiempo Invertido:</span>
+                  <span class="value">{{ clase.time_spent_hours }}h {{ clase.time_spent_seconds }}s</span>
+                </div>
+                <div class="detail" *ngIf="clase.started">
+                  <span class="label">Progreso:</span>
+                  <span class="value">{{ clase.percent || '—' }}%</span>
+                </div>
+                <div class="detail" *ngIf="clase.grade">
+                  <span class="label">Calificación:</span>
+                  <span class="value grade" [ngClass]="'grade-' + clase.grade.toLowerCase()">{{ clase.grade }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="(usuarioDetail()?.classes?.length ?? 0) === 0" class="empty-state">
+              <p>No hay clases enrolladas</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Activity Tab -->
+      <mat-tab label="Actividad">
+        <ng-template mat-tab-label>
+          <mat-icon>activity</mat-icon>
+          <span>Actividad Diaria</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="activity-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Sesiones</th>
+                  <th>Total Minutos</th>
+                  <th>Promedio (min)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let activity of usuarioDetail()?.daily_activity">
+                  <td>{{ formatDate(activity.date) }}</td>
+                  <td>{{ activity.sessions }}</td>
+                  <td>{{ activity.total_minutes }}</td>
+                  <td>{{ activity.avg_minutes }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="(usuarioDetail()?.daily_activity?.length ?? 0) === 0" class="empty-state">
+            <p>No hay actividad registrada</p>
+          </div>
+        </div>
+      </mat-tab>
+      <!-- Racha Tab -->
+      <!-- Racha Tab -->
+      <mat-tab label="Racha">
+        <ng-template mat-tab-label>
+          <mat-icon>trending_up</mat-icon>
+          <span>Racha</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="racha-container">
+            <!-- Por cada clase con historial -->
+            <div *ngFor="let streak of usuarioDetail()?.daily_streak" class="racha-class-section">
+              
+              <!-- RACHA BADGE - GRANDE Y DESTACADO -->
+              <div class="racha-alert-box">
+                <div class="racha-alert-icon">
+                  <mat-icon>local_fire_department</mat-icon>
+                </div>
+                <div class="racha-alert-content">
+                  <h2>{{ streak.class_name }}</h2>
+                  <div class="racha-stats">
+                    <div class="racha-stat-item">
+                      <span class="racha-label">Racha Actual</span>
+                      <span class="racha-value">{{ streak.total_daily_streak }} días</span>
+                    </div>
+                    <div class="racha-stat-divider"></div>
+                    <div class="racha-stat-item">
+                      <span class="racha-label">Registros</span>
+                      <span class="racha-value">{{ streak.history?.length ?? 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tabla de historial de progreso -->
+              <div class="racha-history-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha/Hora</th>
+                      <th>Calificación Anterior</th>
+                      <th>Calificación Actual</th>
+                      <th>Progreso</th>
+                      <th>Tiempo (seg)</th>
+                      <th>Última Visita</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let record of streak.history" [class.improved]="record.delta_percent > 0">
+                      <td class="date-time">{{ formatDateTime(record.recorded_at) }}</td>
+                      <td class="grade-previous">
+                        <span class="grade-value" [ngClass]="'grade-' + (record.prev_grade || '—').toLowerCase()">
+                          {{ record.prev_grade || '—' }}
+                        </span>
+                        <span class="percent-value">({{ record.prev_percent || '—' }}%)</span>
+                      </td>
+                      <td class="grade-current">
+                        <span class="grade-value" [ngClass]="'grade-' + (record.grade || '—').toLowerCase()">
+                          {{ record.grade || '—' }}
+                        </span>
+                        <span class="percent-value">({{ record.percent || '—' }}%)</span>
+                      </td>
+                      <td class="delta-progress">
+                        <span *ngIf="record.delta_percent > 0" class="delta-positive">
+                          <mat-icon>arrow_upward</mat-icon>
+                          +{{ record.delta_percent | number:'1.2-2' }}%
+                        </span>
+                        <span *ngIf="record.delta_percent === 0" class="delta-neutral">
+                          —
+                        </span>
+                        <span *ngIf="record.delta_percent < 0" class="delta-negative">
+                          <mat-icon>arrow_downward</mat-icon>
+                          {{ record.delta_percent | number:'1.2-2' }}%
+                        </span>
+                      </td>
+                      <td class="time-spent">{{ record.time_spent_seconds }}s</td>
+                      <td class="last-visited">{{ formatDateTime(record.last_visited_at) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Separador entre clases -->
+              <div class="racha-divider"></div>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="(usuarioDetail()?.daily_streak?.length ?? 0) === 0" class="empty-state">
+              <p>No hay información de racha disponible</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
