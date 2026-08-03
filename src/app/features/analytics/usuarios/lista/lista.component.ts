@@ -4,8 +4,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { DataTableComponent, DataTableColumn, DataTablePageEvent } from '../../../../shared/components/data-table/data-table.component';
-import { UsuarioDetalleComponent } from './usuario-detalle/usuario-detalle.component';
+
 import { ConfigService } from '../../../../core/services/config.service';
+import { Router } from '@angular/router';
 
 /** Columnas que el backend acepta en `order_by` (GetUsersListRequest). */
 const ORDERABLE = ['last_login_at', 'first_login_at', 'joined_at', 'first_name', 'last_name'];
@@ -41,8 +42,8 @@ export class UsuariosListaComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private dialog: MatDialog,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -124,12 +125,8 @@ export class UsuariosListaComponent implements OnInit {
 
   /** Abre el modal con el detalle completo del usuario. */
   view(row: any): void {
-    this.dialog.open(UsuarioDetalleComponent, {
-      width: '900px',
-      maxWidth: '95vw',
-      maxHeight: '95vh',
-      data: { neoId: row.neo_id },
-    });
+    console.log('Click en view, row:', row);
+    this.router.navigate(['/analytics/usuarios', row.neo_id, 'detail']);
   }
 
   /** Editar usuario. */

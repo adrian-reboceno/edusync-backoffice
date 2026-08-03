@@ -35,7 +35,10 @@
     <!-- Plantilla de acciones -->
     <ng-template #actionsTemplate let-row="$implicit">
       <div class="actions-cell">
-        <button class="action-btn view" title="Ver detalles" (click)="view(row)">
+        <button (click)="view(row)" 
+              type="button"
+              class="action-btn"
+              title="Ver detalles">
           <mat-icon>visibility</mat-icon>
         </button>
         <button class="action-btn edit" title="Editar" (click)="edit(row)">
