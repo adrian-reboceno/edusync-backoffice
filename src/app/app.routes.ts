@@ -1,47 +1,54 @@
+// Busca en tu app.routes.ts esta línea:
+// import { UsuariosListaComponent } from './features/analytics/usuarios/lista/lista.component';
+
+// Y reemplázala con:
+import { ListaComponent } from './features/analytics/usuarios/lista/lista.component';
+
+// Luego busca donde se usa en las rutas y cambia:
+// { path: 'usuarios', component: UsuariosListaComponent }
+// por:
+// { path: 'usuarios', component: ListaComponent }
+
+// Ejemplo completo de cómo debería verse:
+
 import { Routes } from '@angular/router';
-import { LoginComponent } from './auth/login.component';
 import { AuthGuard } from './auth/guards/auth.guard';
-import { MainLayoutComponent } from './shared/layout/main-layout.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { UsuariosResumenComponent } from './features/analytics/usuarios/resumen/resumen.component';
-import { UsuariosListaComponent } from './features/analytics/usuarios/lista/lista.component';
-import { UsuarioDetailComponent } from './features/analytics/usuarios/detail/usuario-detail.component';
+import { ListaComponent } from './features/analytics/usuarios/lista/lista.component';
+// ... otros imports
 
 export const routes: Routes = [
   {
-    path: 'auth/login',
-    component: LoginComponent
-  },
-  {
     path: '',
-    component: MainLayoutComponent,
     canActivate: [AuthGuard],
     children: [
       {
         path: 'dashboard',
-        component: DashboardComponent
+        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
-        path: 'analytics/usuarios/resumen',
-        component: UsuariosResumenComponent
-      },
-      {
-        path: 'analytics/usuarios/lista',
-        component: UsuariosListaComponent
-      },
-      {
-        path: 'analytics/usuarios/:neoId/detail',
-        component: UsuarioDetailComponent
-      },
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
+        path: 'analytics',
+        children: [
+          {
+            path: 'usuarios',
+            children: [
+              {
+                path: 'lista',
+                component: ListaComponent  // ← CAMBIO AQUÍ
+              },
+              {
+                path: ':neoId',
+                children: [
+                  {
+                    path: 'detail',
+                    loadComponent: () => import('./features/analytics/usuarios/detail/usuario-detail.component').then(m => m.UsuarioDetailComponent)
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },
-  {
-    path: '**',
-    redirectTo: '/auth/login'
-  }
+  // ... resto de rutas
 ];

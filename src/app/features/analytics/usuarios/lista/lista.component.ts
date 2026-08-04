@@ -1,154 +1,253 @@
-import { Component, OnInit, signal } from '@angular/core';
+import {
+  Component, inject, signal, OnInit, AfterViewInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
-import { DataTableComponent, DataTableColumn, DataTablePageEvent } from '../../../../shared/components/data-table/data-table.component';
-
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../../../../core/services/config.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Router } from '@angular/router';
 
-/** Columnas que el backend acepta en `order_by` (GetUsersListRequest). */
-const ORDERABLE = ['last_login_at', 'first_login_at', 'joined_at', 'first_name', 'last_name'];
-const DEFAULT_ORDER_BY = 'last_login_at';
+export interface UsuarioDTO {
+  neo_id: string;
+  sis_id: string;
+  userid: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  roles: string[];
+  organization_id: string;
+  organization_name: string;
+  language: string;
+  time_zone: string;
+  joined_at: string;
+  first_login_at: string | null;
+  last_login_at: string | null;
+  activated: boolean;
+  days_since_last_login: number;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
 
 @Component({
-  selector: 'app-usuarios-lista',
+  selector: 'app-lista',
   standalone: true,
-  imports: [CommonModule, DataTableComponent, MatIconModule],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, MatTabsModule],
   templateUrl: './lista.component.html',
-  styleUrl: './lista.component.scss'
+  styleUrl: './lista.component.scss',
 })
-export class UsuariosListaComponent implements OnInit {
-  /* ── State ──────────────────────────────────── */
-  rows = signal<any[]>([]);
+export class ListaComponent implements OnInit, AfterViewInit {
+  private http = inject(HttpClient);
+  private configService = inject(ConfigService);
+  private toastService = inject(ToastService);
+  private router = inject(Router);
+
+  // Signals
+  usuarios = signal<UsuarioDTO[]>([]);
   total = signal(0);
   loading = signal(false);
-  error = signal<string | null>(null);
-  selectedRows = signal<any[]>([]);
+  filterActive = signal<boolean | undefined>(undefined);
+  filterStatus = signal<'all' | 'logged_in' | 'never_logged'>('all');
+  pageNumber = signal(1);
 
-  /* ── Tabla ──────────────────────────────────── */
-  columns: DataTableColumn[] = [
-    { key: 'neo_id', label: 'ID', sortable: false },
-    { key: 'first_name', label: 'Nombre', sortable: true },
-    { key: 'last_name', label: 'Apellido', sortable: true },
-    { key: 'email', label: 'Email', sortable: false },
-    { key: 'roles_label', label: 'Roles', sortable: false },
-    { key: 'organization_name', label: 'Organización', sortable: false },
-    { key: 'last_login_at', label: 'Último acceso', sortable: true },
-    { key: 'total_sessions', label: 'Sesiones', sortable: false },
-    { key: 'activated_label', label: 'Estado', sortable: false },
-  ];
+  // Estado de paginación y búsqueda
+  private currentPage = 1;
+  private currentSize = 10;
+  private currentSearch = '';
+  private currentSortKey = '';
+  private currentSortDir: 'asc' | 'desc' = 'asc';
 
-  constructor(
-    private http: HttpClient,
-    private configService: ConfigService,
-    private router: Router
-  ) {}
+  // Getters calculados
+  get paginationInfo(): string {
+    const from = (this.currentPage - 1) * this.currentSize + 1;
+    const to = Math.min(this.currentPage * this.currentSize, this.total());
+    return `Mostrando ${from} a ${to} de ${this.total()} usuarios`;
+  }
+
+  get hasNextPage(): boolean {
+    return this.currentPage < Math.ceil(this.total() / this.currentSize);
+  }
+
+  get hasPrevPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.total() / this.currentSize);
+  }
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.loadData();
   }
 
-  /** Maneja cambios en paginación, búsqueda y ordenamiento. */
-  onPageChange(event: DataTablePageEvent): void {
-    this.loadUsers(event);
+  ngAfterViewInit(): void {
+    // Inicializar si es necesario
   }
 
-  /** Maneja cambios en selección de filas. */
-  onSelectionChange(selected: any[]): void {
-    this.selectedRows.set(selected);
+  // ✅ Handler para cambio de select (sin type casting en template)
+  onRecordsPerPageChangeHandler(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    if (target && target.value) {
+      this.onRecordsPerPageChange(target.value);
+    }
   }
 
-  /**
-   * Carga usuarios desde GET /api/v1/analytics/users.
-   *
-   * El endpoint usa snake_case (`per_page`, `order_by`, `order_dir`) y devuelve
-   * el total dentro de `meta`, por eso se traduce el evento del data-table.
-   */
-  private loadUsers(event?: DataTablePageEvent): void {
+  // ✅ Handler para búsqueda (sin type casting en template)
+  onSearchHandler(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target && target.value !== undefined) {
+      this.onSearch(target.value);
+    }
+  }
+
+  loadData(): void {
     this.loading.set(true);
-    this.error.set(null);
-
-    // El data-table arranca con sortKey vacío; el backend valida contra una
-    // lista blanca, así que cualquier valor no permitido se descarta.
-    const orderBy = event?.sortKey && ORDERABLE.includes(event.sortKey)
-      ? event.sortKey
-      : DEFAULT_ORDER_BY;
-
-    let params = new HttpParams()
-      .set('page', String(event?.page ?? 1))
-      .set('per_page', String(event?.pageSize ?? 10))
-      .set('order_by', orderBy)
-      .set('order_dir', event?.sortDir ?? 'desc');
-
-    const search = event?.search?.trim();
-    if (search) {
-      params = params.set('search', search);
+    
+    let params = new HttpParams();
+    if (this.currentSearch) {
+      params = params.set('search', this.currentSearch);
+    }
+    if (this.filterActive() !== undefined) {
+      params = params.set('activated', String(this.filterActive()));
+    }
+    if (this.currentSize) {
+      params = params.set('per_page', this.currentSize);
+    }
+    if (this.currentPage) {
+      params = params.set('page', this.currentPage);
     }
 
-    const url = this.configService.analyticsUsersUrl;
+    const url = `${this.configService.apiUrl}/analytics/users`;
 
-    this.http.get<any>(url, { params }).subscribe({
+    this.http.get<PaginatedResponse<UsuarioDTO>>(url, { params }).subscribe({
       next: (response) => {
-        this.rows.set((response.data ?? []).map((u: any) => this.toRow(u)));
-        this.total.set(response.meta?.total ?? 0);
+        this.usuarios.set(response.data);
+        this.total.set(response.meta.total);
+        this.pageNumber.set(this.currentPage);
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading users:', err);
-        this.rows.set([]);
-        this.total.set(0);
-        this.error.set('No se pudieron cargar los usuarios.');
+      error: (error) => {
+        console.error('Error cargando usuarios:', error);
+        this.toastService.error(
+          'Error',
+          'No se pudieron cargar los usuarios'
+        );
         this.loading.set(false);
       }
     });
   }
 
-  /** Aplana el usuario del API a valores listos para mostrar en la tabla. */
-  private toRow(u: any): any {
-    return {
-      ...u,
-      roles_label: (u.roles ?? []).join(', ') || '—',
-      last_login_at: this.formatDate(u.last_login_at),
-      joined_at: this.formatDate(u.joined_at),
-      activated_label: u.activated ? 'Activado' : 'Sin acceso',
-    };
+  onSearch(searchTerm: string): void {
+    this.currentSearch = searchTerm;
+    this.currentPage = 1;
+    this.loadData();
   }
 
-  private formatDate(value: string | null): string {
-    if (!value) return 'Nunca';
-    return new Date(value).toLocaleDateString('es-MX', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
+  onRecordsPerPageChange(size: string): void {
+    this.currentSize = parseInt(size, 10);
+    this.currentPage = 1;
+    this.loadData();
   }
 
-  /** Abre el modal con el detalle completo del usuario. */
-  view(row: any): void {
-    console.log('Click en view, row:', row);
-    this.router.navigate(['/analytics/usuarios', row.neo_id, 'detail']);
+  setActive(value: boolean | undefined): void {
+    this.filterActive.set(value);
+    this.currentPage = 1;
+    this.loadData();
   }
 
-  /** Editar usuario. */
-  edit(row: any): void {
-    console.log('Edit user:', row);
-    // TODO: Abrir modal de edición
+  setStatus(value: 'all' | 'logged_in' | 'never_logged'): void {
+    this.filterStatus.set(value);
+    this.currentPage = 1;
+    this.loadData();
   }
 
-  /** Eliminar usuario. */
-  delete(row: any): void {
-    console.log('Delete user:', row);
-    // TODO: Confirmar y eliminar
-  }
-
-  /** Exportar filas seleccionadas. */
-  exportSelected(): void {
-    const selected = this.selectedRows();
-    if (selected.length === 0) {
-      alert('Selecciona al menos una fila');
-      return;
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.pageNumber.set(page);
+      this.loadData();
     }
-    console.log('Export:', selected);
-    // TODO: Exportar a CSV/Excel
+  }
+
+  firstPage(): void {
+    this.goToPage(1);
+  }
+
+  lastPage(): void {
+    this.goToPage(this.totalPages);
+  }
+
+  previousPage(): void {
+    if (this.hasPrevPage) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  onUserClick(usuario: UsuarioDTO): void {
+    // Navegar a detalle del usuario
+    this.router.navigate([`/analytics/usuarios/${usuario.neo_id}/detail`]);
+  }
+
+  getInitials(usuario: UsuarioDTO): string {
+    return `${usuario.first_name.charAt(0)}${usuario.last_name.charAt(0)}`.toUpperCase();
+  }
+
+  getRoleDisplay(roles: string[]): string {
+    if (!roles || roles.length === 0) return '—';
+    return roles[0];
+  }
+
+  getStatusBadgeClass(usuario: UsuarioDTO): string {
+    if (!usuario.activated) return 'inactive';
+    if (!usuario.last_login_at) return 'never-logged';
+    return 'active';
+  }
+
+  getStatusText(usuario: UsuarioDTO): string {
+    if (!usuario.activated) return 'Inactivo';
+    if (!usuario.last_login_at) return 'Nunca ha iniciado';
+    return 'Activo';
+  }
+
+  getPageNumbers(): number[] {
+    const maxVisiblePages = 5;
+    const pages = [];
+    const totalPages = this.totalPages;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const halfWindow = Math.floor(maxVisiblePages / 2);
+      let start = Math.max(1, this.currentPage - halfWindow);
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+      
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   }
 }
