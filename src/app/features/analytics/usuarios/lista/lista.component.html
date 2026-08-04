@@ -1,54 +1,153 @@
-<div class="usuarios-lista-wrapper">
-  <!-- Header -->
-  <div class="lista-header">
-    <h2>Lista de Usuarios</h2>
-    <p class="subtitle">Gestiona y visualiza todos los usuarios del sistema</p>
+<div class="usuarios-page">
+
+  <!-- HEADER CON TÍTULO Y BREADCRUMB -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Analytics Usuarios</h1>
+      <nav class="breadcrumb">
+        <span>EduSync Bridge</span>
+        <mat-icon>chevron_right</mat-icon>
+        <span>Analytics</span>
+        <mat-icon>chevron_right</mat-icon>
+        <span class="bc-active">Usuarios</span>
+      </nav>
+    </div>
   </div>
 
-  <!-- Acciones -->
-  <div class="lista-actions">
-    <button class="btn btn-primary" [disabled]="selectedRows().length === 0" (click)="exportSelected()">
-      <mat-icon>download</mat-icon>
-      Exportar {{ selectedRows().length > 0 ? `(${selectedRows().length})` : '' }}
+  <!-- FILTROS TIPO CHIPS -->
+  <div class="filter-bar">
+    <button class="filter-chip" [class.active]="filterActive() === undefined" (click)="setActive(undefined)">
+      Todos los estados
+    </button>
+    <button class="filter-chip" [class.active]="filterActive() === true" (click)="setActive(true)">
+      Activos
+    </button>
+    <button class="filter-chip" [class.active]="filterActive() === false" (click)="setActive(false)">
+      Inactivos
+    </button>
+    <div class="filter-separator"></div>
+    <button class="filter-chip" [class.active]="filterStatus() === 'all'" (click)="setStatus('all')">
+      Todos
+    </button>
+    <button class="filter-chip" [class.active]="filterStatus() === 'logged_in'" (click)="setStatus('logged_in')">
+      Con acceso
+    </button>
+    <button class="filter-chip" [class.active]="filterStatus() === 'never_logged'" (click)="setStatus('never_logged')">
+      Sin acceso
     </button>
   </div>
 
-  <!-- Error -->
-  @if (error()) {
-    <div class="lista-error">
-      <mat-icon>error_outline</mat-icon>
-      <span>{{ error() }}</span>
+  <!-- TABLA CONTENEDOR -->
+  <div class="table-container">
+
+    <!-- CONTROLES DE TABLA -->
+    <div class="table-controls">
+      <div class="controls-left">
+        <div class="records-per-page">
+          <span>Mostrar</span>
+          <select (change)="onRecordsPerPageChangeHandler($event)">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span>registros</span>
+        </div>
+      </div>
+      <div class="controls-right">
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Buscar por nombre, email..." 
+            (change)="onSearchHandler($event)">
+        </div>
+      </div>
     </div>
-  }
 
-  <!-- Data Table -->
-  <app-data-table
-    [columns]="columns"
-    [rows]="rows()"
-    [total]="total()"
-    [loading]="loading()"
-    [hasActions]="true"
-    trackByKey="neo_id"
-    (pageChange)="onPageChange($event)"
-    (selectionChange)="onSelectionChange($event)">
+    <!-- TABLA DE DATOS -->
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">
+              <input type="checkbox">
+            </th>
+            <th>NOMBRE</th>
+            <th>EMAIL</th>
+            <th>ORGANIZACIÓN</th>
+            <th>ROL</th>
+            <th>ESTADO</th>
+            <th>ÚLTIMO ACCESO</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (usuarios().length > 0) {
+            @for (usuario of usuarios(); track usuario.neo_id) {
+              <tr (click)="onUserClick(usuario)" class="clickable">
+                <td><input type="checkbox"></td>
+                <td class="user-name">
+                  <div class="user-avatar">{{ getInitials(usuario) }}</div>
+                  <div>
+                    <div class="full-name">{{ usuario.first_name }} {{ usuario.last_name }}</div>
+                    <div class="user-id">{{ usuario.neo_id }}</div>
+                  </div>
+                </td>
+                <td><a href="mailto:{{ usuario.email }}">{{ usuario.email }}</a></td>
+                <td>{{ usuario.organization_name }}</td>
+                <td>
+                  <span class="role-badge">{{ getRoleDisplay(usuario.roles) }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [class]="getStatusBadgeClass(usuario)">
+                    {{ getStatusText(usuario) }}
+                  </span>
+                </td>
+                <td class="last-access">
+                  @if (usuario.last_login_at) {
+                    {{ usuario.last_login_at | date:'short' }}
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          } @else {
+            <tr>
+              <td colspan="7" class="empty-message">
+                <p>No hay usuarios para mostrar</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-    <!-- Plantilla de acciones -->
-    <ng-template #actionsTemplate let-row="$implicit">
-      <div class="actions-cell">
-        <button (click)="view(row)" 
-              type="button"
-              class="action-btn"
-              title="Ver detalles">
-          <mat-icon>visibility</mat-icon>
+    <!-- PAGINACIÓN -->
+    <div class="table-pagination">
+      <div class="pagination-info">{{ paginationInfo }}</div>
+      <div class="pagination-controls">
+        <button title="Primera página" [disabled]="!hasPrevPage" (click)="firstPage()">
+          <mat-icon>first_page</mat-icon>
         </button>
-        <button class="action-btn edit" title="Editar" (click)="edit(row)">
-          <mat-icon>edit</mat-icon>
+        <button title="Anterior" [disabled]="!hasPrevPage" (click)="previousPage()">
+          <mat-icon>chevron_left</mat-icon>
         </button>
-        <button class="action-btn delete" title="Eliminar" (click)="delete(row)">
-          <mat-icon>delete</mat-icon>
+
+        @for (page of getPageNumbers(); track page) {
+          <button class="page-number" [class.active]="page === pageNumber()" 
+            (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+
+        <button title="Siguiente" [disabled]="!hasNextPage" (click)="nextPage()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button title="Última página" [disabled]="!hasNextPage" (click)="lastPage()">
+          <mat-icon>last_page</mat-icon>
         </button>
       </div>
-    </ng-template>
+    </div>
 
-  </app-data-table>
+  </div>
+
 </div>
